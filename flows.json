@@ -1,0 +1,136 @@
+[
+    {
+        "id": "b0e536c669b6d97c",
+        "type": "tab",
+        "label": "Fluxo 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "d0329cfa.b11e68",
+        "type": "mqtt in",
+        "z": "b0e536c669b6d97c",
+        "name": "Leitura de Dados de Energia",
+        "topic": "home/sensors/power",
+        "qos": "2",
+        "broker": "mqttBroker",
+        "inputs": 0,
+        "x": 220,
+        "y": 160,
+        "wires": [
+            [
+                "a4a82fd2.d1ef28"
+            ]
+        ]
+    },
+    {
+        "id": "a4a82fd2.d1ef28",
+        "type": "function",
+        "z": "b0e536c669b6d97c",
+        "name": "Processar Dados de Energia",
+        "func": "var powerData = JSON.parse(msg.payload);\nvar current = powerData.current;\nvar temperature = powerData.temperature;\nvar humidity = powerData.humidity;\n\nmsg.payload = {\n    current: current,\n    temperature: temperature,\n    humidity: humidity,\n    report: \"Relatório de Consumo: A corrente é de \" + current + \"A, a temperatura é \" + temperature + \"°C, a umidade é \" + humidity + \"%\"\n};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 500,
+        "y": 100,
+        "wires": [
+            [
+                "e9bf7e4f.1e64a8"
+            ]
+        ]
+    },
+    {
+        "id": "e9bf7e4f.1e64a8",
+        "type": "openai",
+        "z": "b0e536c669b6d97c",
+        "name": "Assistente Virtual",
+        "x": 750,
+        "y": 100,
+        "wires": [
+            [
+                "7bf09d22.03f0e8"
+            ]
+        ]
+    },
+    {
+        "id": "7bf09d22.03f0e8",
+        "type": "function",
+        "z": "b0e536c669b6d97c",
+        "name": "Enviar Mensagem ao Usuário",
+        "func": "msg.payload = {\n    user_message: \"Aqui está o relatório e as dicas para economia de energia: \" + msg.payload.report,\n    assistant_response: msg.payload\n};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1050,
+        "y": 120,
+        "wires": [
+            [
+                "d5989c95.466c78"
+            ]
+        ]
+    },
+    {
+        "id": "d5989c95.466c78",
+        "type": "mqtt out",
+        "z": "b0e536c669b6d97c",
+        "name": "Resposta do Assistente de Energia",
+        "topic": "home/assistant/response",
+        "qos": "0",
+        "broker": "mqttBroker",
+        "x": 1180,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "b13293fe.a60f3",
+        "type": "mqtt in",
+        "z": "b0e536c669b6d97c",
+        "name": "Comando de Voz",
+        "topic": "home/voice/command",
+        "qos": "2",
+        "broker": "mqttBroker",
+        "inputs": 0,
+        "x": 200,
+        "y": 300,
+        "wires": [
+            [
+                "47733b8f.1c8f64"
+            ]
+        ]
+    },
+    {
+        "id": "47733b8f.1c8f64",
+        "type": "openai",
+        "z": "b0e536c669b6d97c",
+        "name": "Responder ao Comando de Voz",
+        "x": 610,
+        "y": 300,
+        "wires": [
+            [
+                "d5989c95.466c78"
+            ]
+        ]
+    },
+    {
+        "id": "mqttBroker",
+        "type": "mqtt-broker",
+        "name": "Broker MQTT",
+        "broker": "broker.hivemq.com",
+        "port": "1883",
+        "clientid": "node-red-client",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "sessionExpiry": "60"
+    }
+]
