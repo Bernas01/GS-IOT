@@ -8,129 +8,89 @@
         "env": []
     },
     {
-        "id": "d0329cfa.b11e68",
-        "type": "mqtt in",
+        "id": "f4d8f9b2cb84b3b7",
+        "type": "inject",
         "z": "b0e536c669b6d97c",
-        "name": "Leitura de Dados de Energia",
-        "topic": "home/sensors/power",
-        "qos": "2",
-        "broker": "mqttBroker",
-        "inputs": 0,
-        "x": 220,
+        "name": "Simular Dados do Sensor",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "topic": "",
+        "payload": "{\"current\": 2.5, \"temperature\": 22.5, \"humidity\": 60}",
+        "payloadType": "json",
+        "x": 270,
+        "y": 220,
+        "wires": [
+            [
+                "adabced47257913f"
+            ]
+        ]
+    },
+    {
+        "id": "adabced47257913f",
+        "type": "function",
+        "z": "b0e536c669b6d97c",
+        "name": "Validar Dados",
+        "func": "var current = msg.payload.current;\nvar temperature = msg.payload.temperature;\nvar humidity = msg.payload.humidity;\n\nif (current == undefined || temperature == undefined || humidity == undefined) {\n    msg.payload = 'Erro: Dados incompletos';\n    return [null, msg];\n}\n\nif (current < 0 || temperature < -50 || temperature > 50 || humidity < 0 || humidity > 100) {\n    msg.payload = 'Erro: Dados fora dos limites';\n    return [null, msg];\n}\n\nmsg.payload = { current: current, temperature: temperature, humidity: humidity };\nreturn [msg, null];",
+        "outputs": 2,
+        "x": 520,
         "y": 160,
         "wires": [
             [
-                "a4a82fd2.d1ef28"
+                "504e857d4f9a3593"
+            ],
+            [
+                "b1b28926c1e5f44b"
             ]
         ]
     },
     {
-        "id": "a4a82fd2.d1ef28",
-        "type": "function",
+        "id": "504e857d4f9a3593",
+        "type": "mysql",
         "z": "b0e536c669b6d97c",
-        "name": "Processar Dados de Energia",
-        "func": "var powerData = JSON.parse(msg.payload);\nvar current = powerData.current;\nvar temperature = powerData.temperature;\nvar humidity = powerData.humidity;\n\nmsg.payload = {\n    current: current,\n    temperature: temperature,\n    humidity: humidity,\n    report: \"Relatório de Consumo: A corrente é de \" + current + \"A, a temperatura é \" + temperature + \"°C, a umidade é \" + humidity + \"%\"\n};\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "x": 500,
+        "mydb": "dbConfig",
+        "name": "Inserir Dados no Banco",
+        "x": 730,
         "y": 100,
         "wires": [
             [
-                "e9bf7e4f.1e64a8"
+                "b6a23bfb3dfe5671"
             ]
         ]
     },
     {
-        "id": "e9bf7e4f.1e64a8",
-        "type": "openai",
+        "id": "b6a23bfb3dfe5671",
+        "type": "function",
         "z": "b0e536c669b6d97c",
-        "name": "Assistente Virtual",
-        "x": 750,
+        "name": "IA para Dicas de Economia de Energia",
+        "func": "var current = msg.payload.current;\nvar temperature = msg.payload.temperature;\nvar humidity = msg.payload.humidity;\n\n// Exemplo básico de IA para dicas de economia\nvar dica = '';\nif (current > 3) {\n    dica = 'Consumo alto! Desligue dispositivos não essenciais.';\n} else if (temperature > 25) {\n    dica = 'Temperatura elevada! Considere ligar ventiladores ou ar condicionado.';\n} else if (humidity > 70) {\n    dica = 'Alta umidade! Use desumidificadores para reduzir o consumo.';\n} else {\n    dica = 'Bom consumo! Continue monitorando.';\n}\n\nmsg.payload = { dica: dica, current: current, temperature: temperature, humidity: humidity };\nreturn msg;",
+        "outputs": 1,
+        "x": 1070,
         "y": 100,
         "wires": [
             [
-                "7bf09d22.03f0e8"
+                "f4b8d1b9a42d9874"
             ]
         ]
     },
     {
-        "id": "7bf09d22.03f0e8",
-        "type": "function",
+        "id": "f4b8d1b9a42d9874",
+        "type": "debug",
         "z": "b0e536c669b6d97c",
-        "name": "Enviar Mensagem ao Usuário",
-        "func": "msg.payload = {\n    user_message: \"Aqui está o relatório e as dicas para economia de energia: \" + msg.payload.report,\n    assistant_response: msg.payload\n};\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "x": 1050,
-        "y": 120,
-        "wires": [
-            [
-                "d5989c95.466c78"
-            ]
-        ]
-    },
-    {
-        "id": "d5989c95.466c78",
-        "type": "mqtt out",
-        "z": "b0e536c669b6d97c",
-        "name": "Resposta do Assistente de Energia",
-        "topic": "home/assistant/response",
-        "qos": "0",
-        "broker": "mqttBroker",
-        "x": 1180,
-        "y": 260,
+        "name": "Dicas para o Usuário",
+        "active": true,
+        "x": 1280,
+        "y": 240,
         "wires": []
     },
     {
-        "id": "b13293fe.a60f3",
-        "type": "mqtt in",
+        "id": "b1b28926c1e5f44b",
+        "type": "debug",
         "z": "b0e536c669b6d97c",
-        "name": "Comando de Voz",
-        "topic": "home/voice/command",
-        "qos": "2",
-        "broker": "mqttBroker",
-        "inputs": 0,
-        "x": 200,
+        "name": "Erro de Dados",
+        "active": true,
+        "x": 800,
         "y": 300,
-        "wires": [
-            [
-                "47733b8f.1c8f64"
-            ]
-        ]
-    },
-    {
-        "id": "47733b8f.1c8f64",
-        "type": "openai",
-        "z": "b0e536c669b6d97c",
-        "name": "Responder ao Comando de Voz",
-        "x": 610,
-        "y": 300,
-        "wires": [
-            [
-                "d5989c95.466c78"
-            ]
-        ]
-    },
-    {
-        "id": "mqttBroker",
-        "type": "mqtt-broker",
-        "name": "Broker MQTT",
-        "broker": "broker.hivemq.com",
-        "port": "1883",
-        "clientid": "node-red-client",
-        "usetls": false,
-        "compatmode": true,
-        "keepalive": "60",
-        "cleansession": true,
-        "birthTopic": "",
-        "birthQos": "0",
-        "birthPayload": "",
-        "closeTopic": "",
-        "closeQos": "0",
-        "closePayload": "",
-        "willTopic": "",
-        "willQos": "0",
-        "willPayload": "",
-        "sessionExpiry": "60"
+        "wires": []
     }
 ]
